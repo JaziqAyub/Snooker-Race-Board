@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0a2418">
 <title>RACE — Snooker Scoring</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><radialGradient id='b' cx='38%25' cy='30%25' r='75%25'><stop offset='0%25' stop-color='%23444'/><stop offset='55%25' stop-color='%230b0b0b'/><stop offset='100%25' stop-color='%23000'/></radialGradient></defs><circle cx='32' cy='32' r='31' fill='url(%23b)'/><ellipse cx='23' cy='19' rx='9' ry='5.5' fill='white' opacity='0.4'/><text x='32' y='43' font-family='Arial Black,Arial,sans-serif' font-size='27' font-weight='900' fill='%23d4af37' text-anchor='middle'>JB</text></svg>">
 <style>
   :root{
     --felt-deep:#06180f;
@@ -540,6 +541,14 @@
       }
     }
     inp.addEventListener("input", positionHint);
+
+    // a pre-filled default name clears on the first tap so you can type your own
+    if(name){
+      inp.dataset.prefill="1";
+      inp.addEventListener("focus", function(){
+        if(inp.dataset.prefill==="1"){ inp.value=""; inp.dataset.prefill=""; positionHint(); }
+      });
+    }
 
     var del=el("button","del"); del.type="button"; del.innerHTML="&times;";
     del.onclick=function(){
