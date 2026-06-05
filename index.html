@@ -286,33 +286,6 @@
   }
   .console.finishing{animation:consoleOut .5s cubic-bezier(.4,0,.2,1) forwards;pointer-events:none;}
 
-  /* per-player recent actions — horizontal scroll keeps the layout fixed */
-  .recent{margin-top:14px;}
-  .recent-h{
-    font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;
-    margin:0 0 8px;display:flex;align-items:center;gap:8px;
-  }
-  .recent-h::before{content:"";flex:none;width:14px;height:2px;background:var(--gold-dim);}
-  .recent-row{
-    display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;
-    padding-bottom:4px;scrollbar-width:none;
-  }
-  .recent-row::-webkit-scrollbar{display:none;}
-  .recent-empty{color:var(--muted);opacity:.55;font-size:13px;font-style:italic;padding:4px 2px;}
-  .rchip{
-    flex:none;display:flex;align-items:center;gap:6px;
-    background:#0a2014;border:1px solid #1d4d33;border-radius:20px;
-    padding:6px 12px;font-weight:800;font-size:14px;color:var(--chalk);
-    font-variant-numeric:tabular-nums;
-  }
-  .rchip .dot{width:11px;height:11px;border-radius:50%;flex:none;box-shadow:inset -1px -1px 2px rgba(0,0,0,.45);}
-  .rchip.neg{border-color:#6b2222;background:#2a0e0e;color:#ff9a9a;}
-  .recent-row .rchip:first-child{animation:chipIn .3s ease;}
-  @keyframes chipIn{from{opacity:0;transform:translateX(-10px) scale(.8);}to{opacity:1;transform:none;}}
-  .dot.red{background:var(--red);} .dot.black{background:#2c2c2c;} .dot.pink{background:var(--pink);}
-  .dot.blue{background:var(--blue);} .dot.brown{background:var(--brown);}
-  .dot.green{background:var(--green);} .dot.yellow{background:var(--yellow);}
-
   /* very small phones: tighten gaps, shrink card padding, keep balls tappable */
   @media(max-width:380px){
     .wrap{padding-left:calc(10px + env(safe-area-inset-left));padding-right:calc(10px + env(safe-area-inset-right));}
@@ -674,13 +647,6 @@
     });
     c.appendChild(fouls);
 
-    var recent=el("div","recent");
-    var rh=el("div","recent-h"); rh.textContent="Recent";
-    var rrow=el("div","recent-row"); rrow.dataset.recent=p.id;
-    rrow.innerHTML='<span class="recent-empty">No pots yet</span>';
-    recent.appendChild(rh); recent.appendChild(rrow);
-    c.appendChild(recent);
-
     return c;
   }
 
@@ -721,28 +687,6 @@
     if(tot){ tot.textContent=p.score; tot.classList.remove("pulse"); void tot.offsetWidth; tot.classList.add("pulse"); }
     var undo=document.querySelector('[data-undo="'+p.id+'"]');
     if(undo) undo.disabled=p.history.length===0;
-    renderRecent(p);
-  }
-
-  function ballKey(label){
-    for(var i=0;i<BALLS.length;i++){ if(BALLS[i].label===label) return BALLS[i].key; }
-    return "";
-  }
-  // newest-first chips: coloured dot + points for pots, red minus for fouls (cap render at 40)
-  function renderRecent(p){
-    var row=document.querySelector('[data-recent="'+p.id+'"]');
-    if(!row) return;
-    if(!p.history.length){ row.innerHTML='<span class="recent-empty">No pots yet</span>'; return; }
-    var html="", shown=0;
-    for(var i=p.history.length-1; i>=0 && shown<40; i--, shown++){
-      var h=p.history[i];
-      if(h.pts<0){
-        html+='<span class="rchip neg">'+h.pts+'</span>';
-      } else {
-        html+='<span class="rchip"><i class="dot '+ballKey(h.label)+'"></i>+'+h.pts+'</span>';
-      }
-    }
-    row.innerHTML=html;
   }
 
   function floatScore(pts, evt){
