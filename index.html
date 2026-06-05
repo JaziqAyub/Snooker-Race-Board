@@ -335,7 +335,13 @@
   .modal .x{position:absolute;}
 
   /* ---------- ADMIN ---------- */
-  .admin-list{display:flex;flex-direction:column;gap:7px;max-height:50vh;overflow:auto;margin:6px 0 16px;text-align:left;}
+  .count-stat{
+    background:#0b2618;border:1px solid var(--gold-dim);border-radius:12px;
+    padding:12px 14px;margin:0 0 12px;color:var(--gold-bright);font-weight:700;
+    letter-spacing:.5px;font-size:14px;text-align:center;
+  }
+  .count-stat b{color:var(--gold);font-size:20px;font-variant-numeric:tabular-nums;}
+  .admin-list{display:flex;flex-direction:column;gap:7px;max-height:42vh;overflow:auto;margin:6px 0 16px;text-align:left;}
   .visit-row{
     display:flex;justify-content:space-between;gap:10px;padding:11px 14px;border-radius:10px;
     background:#0b2618;border:1px solid #18412b;font-size:14px;align-items:center;
@@ -455,6 +461,7 @@
   <div class="card modal" style="max-width:480px;">
     <h2>🔒 Visitor Log</h2>
     <p style="margin-bottom:14px;">Every player who's walked through the door.</p>
+    <div class="count-stat">🌍 Opened worldwide: <b id="globalCount">…</b></div>
     <div class="admin-list" id="adminList"></div>
     <div class="admin-actions">
       <button class="btn danger" id="clearVisitors">Clear Log</button>
@@ -496,6 +503,12 @@
   var LS_VISITS = "race_visitors";
   var LS_SEEN   = "race_seen";
   var MEDALS = ["🥇","🥈","🥉"];
+
+  // Free, no-signup global counter (Abacus). Counts unique opens worldwide;
+  // the total shows in the hidden admin panel.
+  var COUNTER_BASE = "https://abacus.jasoncameron.dev";
+  var COUNTER_NS   = "race-board-snooker-jb";
+  var COUNTER_KEY  = "visits";
 
   var state = { players:[], target:100, finished:false, finishOrder:[] };
   var pendingFinish = null;  // player whose console is waiting to leave after the announcement
@@ -822,6 +835,20 @@
     saveVisitors(v);
   }
 
+  // Increment the global counter once per new visitor. Best-effort/non-blocking.
+  function hitCounter(){
+    try{ fetch(COUNTER_BASE+"/hit/"+COUNTER_NS+"/"+COUNTER_KEY).catch(function(){}); }catch(e){}
+  }
+  // Read the current worldwide total (cb receives a number, or null on failure).
+  function getCounter(cb){
+    try{
+      fetch(COUNTER_BASE+"/get/"+COUNTER_NS+"/"+COUNTER_KEY)
+        .then(function(r){ return r.json(); })
+        .then(function(d){ cb(d && typeof d.value!=="undefined" ? d.value : null); })
+        .catch(function(){ cb(null); });
+    }catch(e){ cb(null); }
+  }
+
   function checkFirstVisit(){
     var seen;
     try{ seen=localStorage.getItem(LS_SEEN); }catch(e){ seen=null; }
@@ -834,6 +861,7 @@
     var name=$("visitorName").value.trim() || "Anonymous";
     try{ localStorage.setItem(LS_SEEN, "1"); }catch(e){}
     logVisit(name);
+    hitCounter();
     $("visitorModal").classList.remove("show");
     toast("Welcome, "+name+" 🎱");
   }
@@ -842,6 +870,8 @@
 
   /* ============ ADMIN PANEL ============ */
   function openAdmin(){
+    var gc=$("globalCount");
+    if(gc){ gc.textContent="…"; getCounter(function(n){ gc.textContent = (n===null ? "—" : n); }); }
     var list=$("adminList");
     var v=loadVisitors().slice().reverse();
     list.innerHTML="";
